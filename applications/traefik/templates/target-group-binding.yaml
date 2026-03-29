@@ -1,0 +1,22 @@
+---
+apiVersion: eks.amazonaws.com/v1
+kind: TargetGroupBinding
+metadata:
+  name: traefik-http
+spec:
+  serviceRef:
+    name: traefik
+    port: 80
+  targetType: ip
+  targetGroupARN: {{ .Values.targetGroupArn.http }}
+---
+apiVersion: eks.amazonaws.com/v1
+kind: TargetGroupBinding
+metadata:
+  name: traefik-https
+spec:
+  serviceRef:
+    name: traefik
+    port: 443
+  targetType: ip
+  targetGroupARN: {{ .Values.targetGroupArn.https }}

@@ -1,0 +1,81 @@
+traefik:
+  image:
+    pullPolicy: Always
+
+  deployment:
+    revisionHistoryLimit: 0
+
+  gateway:
+    enabled: true
+
+  ingressClass:
+    enabled: false
+
+  providers:
+    kubernetesCRD:
+      enabled: true
+    kubernetesIngress:
+      enabled: false
+    kubernetesGateway:
+      enabled: true
+
+  ports:
+    web:
+      forwardedHeaders:
+        insecure: true
+    websecure:
+      forwardedHeaders:
+        insecure: true
+
+  topologySpreadConstraints:
+    - topologyKey: topology.kubernetes.io/zone
+      maxSkew: 1
+      whenUnsatisfiable: DoNotSchedule
+      minDomains: 3
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    - topologyKey: kubernetes.io/hostname
+      maxSkew: 1
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+
+  logs:
+    general:
+      format: json
+      level: "INFO"
+      noColor: true
+    access:
+      enabled: true
+      format:  json
+
+  additionalArguments:
+    # Allow accessing the dashboard at http://localhost:8000/dashboard/ when using port-forward
+    - --api.insecure=true
+    # Skip TLS verification for backends with self-signed certificates
+    - --serversTransport.insecureSkipVerify=true
+
+  service:
+    enabled: true
+    type: ClusterIP
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      memory: 100Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
