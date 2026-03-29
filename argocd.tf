@@ -103,6 +103,13 @@ resource "kubectl_manifest" "argocd_secret_local_cluster" {
   depends_on = [aws_eks_capability.argocd]
 }
 
+resource "random_string" "client_secret" {
+  for_each = toset(["johan", "frans"])
+
+  length  = 32
+  special = false
+}
+
 locals {
   apps = {
     cert-manager = {
@@ -115,6 +122,7 @@ locals {
     traefik = {
       namespace = "traefik"
       values = {
+        clientSecrets = { for name, secret in random_string.client_secret : name => secret.result }
         targetGroupArn = {
           http  = module.nlb.target_groups["traefik-http"].arn
           https = module.nlb.target_groups["traefik-https"].arn
