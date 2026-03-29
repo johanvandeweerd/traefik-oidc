@@ -6,7 +6,7 @@ traefik:
     revisionHistoryLimit: 0
 
   gateway:
-    enabled: true
+    enabled: false
 
   ingressClass:
     enabled: false
