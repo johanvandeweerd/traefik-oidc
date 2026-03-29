@@ -141,6 +141,12 @@ locals {
         realms   = [for realm in local.realms : merge(realm, { clientSecret = random_string.client_secret[realm.name].result })]
       }
     }
+    reverse-proxy = {
+      values = {
+        keycloakHostname = "keycloak.${local.hostname}"
+        realms = local.realms
+      }
+    }
   }
 }
 

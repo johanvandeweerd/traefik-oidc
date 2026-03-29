@@ -1,0 +1,4 @@
+apiVersion: v2
+name: reverse-proxy
+type: application
+version: 0.1.0
