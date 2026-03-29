@@ -28,3 +28,7 @@ variable "github_branch" {
   type        = string
 }
 
+variable "email" {
+  description = "The email address used for Let's Encrypt."
+  type        = string
+}

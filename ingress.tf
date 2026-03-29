@@ -145,3 +145,15 @@ resource "aws_route53_record" "star" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_route53_record" "load_balancer" {
+  zone_id = aws_route53_zone.this.zone_id
+  name    = "load-balancer"
+  type    = "A"
+
+  alias {
+    zone_id                = module.alb.zone_id
+    name                   = module.alb.dns_name
+    evaluate_target_health = false
+  }
+}

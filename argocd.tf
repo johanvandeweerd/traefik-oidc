@@ -107,6 +107,10 @@ locals {
   apps = {
     cert-manager = {
       namespace = "cert-manager"
+      values = {
+        email        = var.email
+        loadBalancer = aws_route53_record.load_balancer.fqdn
+      }
     }
     traefik = {
       namespace = "traefik"
