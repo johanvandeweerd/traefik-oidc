@@ -12,7 +12,7 @@ spec:
     - name: websecure
       protocol: HTTPS
       port: 8443
-      hostname: {{ $realm.hostname }}
+      hostname: {{ $realm.name }}.{{ $.Values.hostname }}
       allowedRoutes:
         namespaces:
           from: Same
@@ -21,7 +21,7 @@ spec:
         certificateRefs:
           - group: core
             kind: Secret
-            name: tls-{{ $realm.hostname | replace "." "-" }}
+            name: tls-{{ $realm.name }}-{{ $.Values.hostname | replace "." "-" }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -32,7 +32,7 @@ spec:
     traefik-oidc-auth:
       Secret: "{{ randAlphaNum 32 }}"
       Provider:
-        Url: https://{{ $.Values.keycloakHostname }}/realms/{{ $realm.name }}
+        Url: https://keycloak.{{ $.Values.hostname }}/realms/{{ $realm.name }}
         ClientId: {{ $realm.name }}
         ClientSecret: "${CLIENT_SECRET_{{ $realm.name | upper }}}"
       Scopes: [ "openid", "profile", "email" ]

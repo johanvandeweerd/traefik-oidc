@@ -32,3 +32,16 @@ variable "email" {
   description = "The email address used for Let's Encrypt."
   type        = string
 }
+
+variable "realms" {
+  description = "List of Keycloak realms to create."
+  type = list(object({
+    name = string
+    users = list(object({
+      username = string
+      first_name = string
+      last_name = string
+      email = string
+    }))
+  }))
+}
