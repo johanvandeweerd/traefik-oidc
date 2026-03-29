@@ -1,0 +1,28 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    host: keycloak-postgresql
+    port: 5432
+    usernameSecret:
+      name: keycloak-db-secret
+      key: username
+    passwordSecret:
+      name: keycloak-db-secret
+      key: password
+    database: keycloak
+  hostname:
+    hostname: https://{{ .Values.hostname }}
+    strict: true
+    backchannelDynamic: false
+  ingress:
+    enabled: false
+  http:
+    httpEnabled: true
+  additionalOptions:
+    - name: proxy-headers
+      value: xforwarded

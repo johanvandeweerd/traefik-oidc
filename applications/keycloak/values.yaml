@@ -1,0 +1,18 @@
+realms:
+  - name: johan
+    users:
+      - username: johan
+        email: johan@engine31.io
+  - name: frans
+    users:
+      - username: frans
+        email: frans@engine31.io
+
+postgresql:
+  auth:
+    database: keycloak
+    username: keycloak
+    password: keycloak
+  primary:
+    persistence:
+      size: 1Gi

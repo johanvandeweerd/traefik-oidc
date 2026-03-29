@@ -64,6 +64,25 @@ resource "aws_security_group" "node" {
   }
 }
 
+resource "kubectl_manifest" "ebs_storage_class" {
+  yaml_body = yamlencode({
+    apiVersion = "storage.k8s.io/v1"
+    kind       = "StorageClass"
+    metadata = {
+      name = "ebs"
+      annotations = {
+        "storageclass.kubernetes.io/is-default-class" = "true"
+      }
+    }
+    provisioner          = "ebs.csi.eks.amazonaws.com"
+    volumeBindingMode    = "WaitForFirstConsumer"
+    reclaimPolicy        = "Delete"
+    parameters = {
+      type = "gp3"
+    }
+  })
+}
+
 resource "kubectl_manifest" "node_class" {
   yaml_body = yamlencode({
     apiVersion = "eks.amazonaws.com/v1"

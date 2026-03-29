@@ -126,6 +126,12 @@ locals {
         hostname = "httpbin.${local.hostname}"
       }
     }
+    keycloak = {
+      namespace = "keycloak"
+      values = {
+        hostname = "keycloak.${local.hostname}"
+      }
+    }
   }
 }
 
