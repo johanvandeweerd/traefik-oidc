@@ -1,3 +1,7 @@
+locals {
+  hostname = "${var.project_name}.${var.hosted_zone}"
+}
+
 resource "aws_route53_record" "ns" {
   zone_id = data.aws_route53_zone.this.zone_id
   name    = var.project_name
@@ -7,5 +11,5 @@ resource "aws_route53_record" "ns" {
 }
 
 resource "aws_route53_zone" "this" {
-  name = "${var.project_name}.${var.hosted_zone}"
+  name = local.hostname
 }

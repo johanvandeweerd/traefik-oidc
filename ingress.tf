@@ -3,7 +3,7 @@ module "load_balancer_certificate" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 6.0"
 
-  domain_name = "*.${var.project_name}.${var.hosted_zone}"
+  domain_name = "*.${local.hostname}"
   zone_id     = aws_route53_zone.this.zone_id
 
   validation_method = "DNS"
