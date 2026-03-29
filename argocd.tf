@@ -121,6 +121,11 @@ locals {
         }
       }
     }
+    httpbin = {
+      values = {
+        hostname = "httpbin.${local.hostname}"
+      }
+    }
   }
 }
 
