@@ -116,8 +116,8 @@ locals {
       namespace = "traefik"
       values = {
         targetGroupArn = {
-          http  = module.alb.target_groups["traefik-http"].arn
-          https = module.alb.target_groups["traefik-https"].arn
+          http  = module.nlb.target_groups["traefik-http"].arn
+          https = module.nlb.target_groups["traefik-https"].arn
         }
       }
     }

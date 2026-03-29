@@ -1,17 +1,5 @@
 # Load Balancer
-module "load_balancer_certificate" {
-  source  = "terraform-aws-modules/acm/aws"
-  version = "~> 6.0"
-
-  domain_name = "*.${local.hostname}"
-  zone_id     = aws_route53_zone.this.zone_id
-
-  validation_method = "DNS"
-
-  wait_for_validation = true
-}
-
-module "alb" {
+module "nlb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "~> 10.0"
 
@@ -19,14 +7,12 @@ module "alb" {
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.public_subnets
 
-  load_balancer_type         = "application"
+  load_balancer_type         = "network"
   enable_deletion_protection = false
-  preserve_host_header       = true
-  xff_header_processing_mode = "append" // "preserve"
 
-  security_group_name            = "${var.project_name}-alb"
+  security_group_name            = "${var.project_name}-nlb"
   security_group_use_name_prefix = false
-  security_group_description     = "TF: Security group used by the ALB for the ${var.project_name} cluster."
+  security_group_description     = "TF: Security group used by the NLB for the ${var.project_name} cluster."
   security_group_ingress_rules = {
     http = {
       description = "TF: HTTP web traffic"
@@ -53,21 +39,20 @@ module "alb" {
     }
   }
   security_group_tags = {
-    Name = "${var.project_name}-alb"
+    Name = "${var.project_name}-nlb"
   }
 
   listeners = {
     http = {
       port     = 80
-      protocol = "HTTP"
+      protocol = "TCP"
       forward = {
         target_group_key = "traefik-http"
       }
     }
     https = {
       port            = 443
-      protocol        = "HTTPS"
-      certificate_arn = module.load_balancer_certificate.acm_certificate_arn
+      protocol        = "TCP"
       forward = {
         target_group_key = "traefik-https"
       }
@@ -78,7 +63,7 @@ module "alb" {
     traefik-http = {
       name              = "${var.project_name}-traefik-http"
       target_type       = "ip"
-      protocol          = "HTTP"
+      protocol          = "TCP"
       port              = 8000
       create_attachment = false
       health_check = {
@@ -96,7 +81,7 @@ module "alb" {
     traefik-https = {
       name              = "${var.project_name}-traefik-https"
       target_type       = "ip"
-      protocol          = "HTTPS"
+      protocol          = "TCP"
       port              = 8443
       create_attachment = false
       health_check = {
@@ -114,24 +99,34 @@ module "alb" {
   }
 }
 
-resource "aws_security_group_rule" "allow_alb_to_worker_nodes_on_8443" {
+resource "aws_security_group_rule" "allow_nlb_to_worker_nodes_on_8000" {
   security_group_id        = aws_security_group.node.id
-  description              = "TF: Allow ALB to communicate with worker nodes on port 8443"
+  description              = "TF: Allow NLB to communicate with worker nodes on port 8000"
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 8000
+  to_port                  = 8000
+  source_security_group_id = module.nlb.security_group_id
+}
+
+resource "aws_security_group_rule" "allow_nlb_to_worker_nodes_on_8443" {
+  security_group_id        = aws_security_group.node.id
+  description              = "TF: Allow NLB to communicate with worker nodes on port 8443"
   type                     = "ingress"
   protocol                 = "tcp"
   from_port                = 8443
   to_port                  = 8443
-  source_security_group_id = module.alb.security_group_id
+  source_security_group_id = module.nlb.security_group_id
 }
 
-resource "aws_security_group_rule" "allow_alb_to_worker_nodes_on_8080" {
+resource "aws_security_group_rule" "allow_nlb_to_worker_nodes_on_8080" {
   security_group_id        = aws_security_group.node.id
-  description              = "TF: Allow ALB to do Traefik health check with worker nodes on port 8080"
+  description              = "TF: Allow NLB to do Traefik health check with worker nodes on port 8080"
   type                     = "ingress"
   protocol                 = "tcp"
   from_port                = 8080
   to_port                  = 8080
-  source_security_group_id = module.alb.security_group_id
+  source_security_group_id = module.nlb.security_group_id
 }
 
 resource "aws_route53_record" "star" {
@@ -140,8 +135,8 @@ resource "aws_route53_record" "star" {
   type    = "A"
 
   alias {
-    zone_id                = module.alb.zone_id
-    name                   = module.alb.dns_name
+    zone_id                = module.nlb.zone_id
+    name                   = module.nlb.dns_name
     evaluate_target_health = false
   }
 }
@@ -152,8 +147,8 @@ resource "aws_route53_record" "load_balancer" {
   type    = "A"
 
   alias {
-    zone_id                = module.alb.zone_id
-    name                   = module.alb.dns_name
+    zone_id                = module.nlb.zone_id
+    name                   = module.nlb.dns_name
     evaluate_target_health = false
   }
 }
