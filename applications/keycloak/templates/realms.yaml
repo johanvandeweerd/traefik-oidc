@@ -8,25 +8,30 @@ spec:
   keycloakCRName: keycloak
   realm:
     realm: {{ $realm.name }}
+    enabled: true
     clients:
       - name: {{ $realm.name }}
+        enabled: true
         clientId: {{ $realm.name }}
-        secret: "{{ randAlphaNum 32 }}"
+        secret: "{{ $realm.clientSecret }}"
         protocol: openid-connect
         clientAuthenticatorType: client-secret
         standardFlowEnabled: true
         frontchannelLogout: true
-        rootUrl: "https://{{ $realm.name }}.{{ $.Values.hostname }}"
+        rootUrl: "https://{{ $realm.hostname }}"
         redirectUris:
-          - "https://{{ $realm.name }}.{{ $.Values.hostname }}/*"
+          - "https://{{ $realm.hostname }}/*"
     users:
       {{- range $user := $realm.users }}
-      - username: {{ $user.username }}
+      - id: {{ $user.username }}
+        enabled: true
+        username: {{ $user.username }}
         credentials:
           - type: password
-            value: "{{ randAlphaNum 16 }}"
+            value: "{{ randAlphaNum 20 }}"
+        firstName: {{ $user.first_name }}
+        lastName: {{ $user.last_name }}
         email: {{ $user.email }}
         emailVerified: true
-        enabled: true
       {{- end }}
 {{- end }}

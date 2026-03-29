@@ -104,7 +104,7 @@ resource "kubectl_manifest" "argocd_secret_local_cluster" {
 }
 
 resource "random_string" "client_secret" {
-  for_each = toset(["johan", "frans"])
+  for_each = toset([for realm in local.realms : realm.name])
 
   length  = 32
   special = false
@@ -138,6 +138,7 @@ locals {
       namespace = "keycloak"
       values = {
         hostname = "keycloak.${local.hostname}"
+        realms   = [for realm in local.realms : merge(realm, { clientSecret = random_string.client_secret[realm.name].result })]
       }
     }
   }
