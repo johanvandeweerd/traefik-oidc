@@ -102,3 +102,51 @@ resource "kubectl_manifest" "argocd_secret_local_cluster" {
 
   depends_on = [aws_eks_capability.argocd]
 }
+
+locals {
+  apps = {
+    cert-manager = {
+      namespace = "cert-manager"
+    }
+  }
+}
+
+resource "kubectl_manifest" "argocd_applications" {
+  for_each = local.apps
+
+  yaml_body = yamlencode({
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name       = each.key
+      namespace  = "argocd"
+      finalizers = ["resources-finalizer.argocd.argoproj.io"]
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.github_repository
+        targetRevision = var.github_branch
+        path           = "applications/${each.key}"
+        helm = {
+          valuesObject = try(each.value.values, {})
+        }
+      }
+      destination = {
+        server    = module.eks.cluster_arn
+        namespace = try(each.value.namespace, "default")
+      }
+      syncPolicy = {
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+      }
+    }
+  })
+
+  depends_on = [aws_eks_capability.argocd]
+}
