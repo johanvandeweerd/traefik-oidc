@@ -1,0 +1,25 @@
+{{- range $realm := .Values.realms }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-http-production
+  name: reverse-proxy-{{ $realm.name }}
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: websecure
+      protocol: HTTPS
+      port: 8443
+      hostname: {{ $realm.name }}.{{ $.Values.hostname }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: core
+            kind: Secret
+            name: tls-{{ $realm.name }}-{{ $.Values.hostname | replace "." "-" }}
+{{- end }}

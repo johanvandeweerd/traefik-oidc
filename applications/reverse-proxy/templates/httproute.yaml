@@ -1,0 +1,24 @@
+{{- range $realm := .Values.realms }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: reverse-proxy-{{ $realm.name }}
+spec:
+  parentRefs:
+    - name: reverse-proxy-{{ $realm.name }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: reverse-proxy-{{ $realm.name }}-traefik-oidc-auth
+      backendRefs:
+        - name: httpbin
+          port: 80
+{{- end }}

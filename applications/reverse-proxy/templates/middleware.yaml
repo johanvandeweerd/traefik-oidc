@@ -1,0 +1,20 @@
+{{- range $realm := .Values.realms }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: reverse-proxy-{{ $realm.name }}-traefik-oidc-auth
+spec:
+  plugin:
+    traefik-oidc-auth:
+      Secret: "{{ randAlphaNum 32 }}"
+      Provider:
+        Url: https://keycloak.{{ $.Values.hostname }}/realms/{{ $realm.name }}
+        ClientId: {{ $realm.name }}
+        ClientSecret: "${CLIENT_SECRET_{{ $realm.name | upper }}}"
+      Scopes: [ "openid", "profile", "email" ]
+      Headers:
+        - Name: "Authorization"
+          Value: "{{`Bearer {{ .accessToken }}`}}"
+      BypassAuthenticationRule: Path(`/manifest.json`)
+{{- end }}
