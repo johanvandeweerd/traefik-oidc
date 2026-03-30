@@ -36,6 +36,10 @@ spec:
         ClientId: {{ $realm.name }}
         ClientSecret: "${CLIENT_SECRET_{{ $realm.name | upper }}}"
       Scopes: [ "openid", "profile", "email" ]
+      Headers:
+        - Name: Authorization
+          Value: "{{`Bearer {{ .accessToken }}`}}"
+      BypassAuthenticationRule: Path(`/manifest.json`)
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
