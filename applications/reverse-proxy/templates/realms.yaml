@@ -1,5 +1,41 @@
 {{- range $realm := .Values.realms }}
 ---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakRealmImport
+metadata:
+  name: realm-{{ $realm.name }}
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+  realm:
+    realm: {{ $realm.name }}
+    enabled: true
+    clients:
+      - name: {{ $realm.name }}
+        enabled: true
+        clientId: {{ $realm.name }}
+        secret: "{{ $realm.clientSecret }}"
+        protocol: openid-connect
+        clientAuthenticatorType: client-secret
+        standardFlowEnabled: true
+        frontchannelLogout: true
+        rootUrl: "https://{{ $realm.name }}.{{ $.Values.hostname }}"
+        redirectUris:
+          - "https://{{ $realm.name }}.{{ $.Values.hostname }}/*"
+    users:
+      {{- range $user := $realm.users }}
+      - id: {{ $user.username }}
+        enabled: true
+        username: {{ $user.username }}
+        credentials:
+          - type: password
+            value: "{{ randAlphaNum 20 }}"
+        firstName: {{ $user.first_name }}
+        lastName: {{ $user.last_name }}
+        email: {{ $user.email }}
+        emailVerified: true
+      {{- end }}
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:

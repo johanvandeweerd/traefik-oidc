@@ -138,13 +138,12 @@ locals {
       namespace = "keycloak"
       values = {
         hostname = "keycloak.${local.hostname}"
-        realms   = [for realm in var.realms : merge(realm, { clientSecret = random_string.client_secret[realm.name].result })]
       }
     }
     reverse-proxy = {
       values = {
         hostname = local.hostname
-        realms   = var.realms
+        realms   = [for realm in var.realms : merge(realm, { clientSecret = random_string.client_secret[realm.name].result })]
       }
     }
   }
